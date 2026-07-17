@@ -1,5 +1,6 @@
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -12,8 +13,8 @@ def strip_ansi(text: str) -> str:
     return ANSI_ESCAPE.sub('', text)
 
 
-HOST = "127.0.0.1"
-PORT = 8765
+HOST = os.getenv("BACKEND_HOST", "127.0.0.1")
+PORT = int(os.getenv("BACKEND_PORT", "8765"))
 
 
 def run_user_script(payload: dict) -> dict:
