@@ -1,0 +1,52 @@
+#tiddl-local-runner-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 40px;
+  margin-left: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #204d3a, #2f7c58);
+  color: #f6f3ea;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+
+#tiddl-local-runner-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+#tiddl-local-runner-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+#tiddl-local-runner-status {
+  position: fixed;
+  left: 50%;
+  bottom: 96px;
+  z-index: 2147483647;
+  transform: translateX(-50%);
+  max-width: 320px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #f6f3ea;
+  color: #1b1b1b;
+  font:
+    500 13px/1.4 Arial,
+    sans-serif;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+}
+
+#tiddl-local-runner-status[data-state="error"] {
+  background: #7f1d1d;
+  color: #fff5f5;
+}
+
+#tiddl-local-runner-status[data-state="success"] {
+  background: #ecfdf3;
+  color: #14532d;
+}

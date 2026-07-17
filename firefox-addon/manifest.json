@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Tiddl Local Runner",
+  "version": "0.1.0",
+  "description": "Adds a button on a target page and forwards actions to a local Python backend.",
+  "permissions": ["storage"],
+  "host_permissions": ["http://127.0.0.1/*"],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://tidal.com/*"],
+      "js": ["content-script.js"],
+      "css": ["content-style.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "tiddl-local-runner@example.com"
+    }
+  }
+}
