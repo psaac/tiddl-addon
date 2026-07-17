@@ -92,17 +92,25 @@
 
       // Create button with a function to get the URL for this item
       const button = createButton(() => {
-        const mediaLink = item.querySelector("a[href]");
-        const href = mediaLink?.getAttribute("href");
-        if (!href) {
+        // Find the span with data-id attribute in the titleColumn
+        const trackSpan = titleColumn.querySelector("span[data-id]");
+        const trackId = trackSpan?.getAttribute("data-id");
+
+        if (!trackId) {
           return null;
         }
-        return new URL(href, window.location.origin).toString();
+
+        return `https://tidal.com/track/${trackId}`;
       });
       button.classList.add(BUTTON_CLASS);
 
-      // Insert button after indexColumn and before titleColumn
-      titleColumn.parentElement?.insertBefore(button, titleColumn);
+      // Wrap button in a container div
+      const buttonWrapper = document.createElement("div");
+      buttonWrapper.classList.add("tiddl-button-wrapper");
+      buttonWrapper.appendChild(button);
+
+      // Insert wrapper after indexColumn and before titleColumn
+      titleColumn.parentElement?.insertBefore(buttonWrapper, titleColumn);
     });
   }
 
@@ -158,5 +166,15 @@
     status.hidden = false;
     status.textContent = message;
     status.dataset.state = isError ? "error" : "success";
+
+    // Clear any existing timeout
+    if (status.hideTimeout) {
+      clearTimeout(status.hideTimeout);
+    }
+
+    // Hide the status after 10 seconds
+    status.hideTimeout = setTimeout(() => {
+      status.hidden = true;
+    }, 10000);
   }
 })();
