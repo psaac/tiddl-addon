@@ -1,8 +1,7 @@
-version: "3.8"
-
 services:
-  backend:
-    # build: .
+  tiddl-backend:
+    # build: . # Build locally
+    image: ghcr.io/psaac/tiddl-addon/tiddl-backend:latest
     ports:
       - "8765:8765"
     environment:

@@ -143,3 +143,7 @@ Once the backend is running and the extension is loaded:
 
 - This version uses local HTTP, not Native Messaging
 - The Firefox extension and backend must be on the same machine (or the backend must be accessible from the browser)
+
+## TODO
+
+Fix download location as it is now downloaded inside docker container
