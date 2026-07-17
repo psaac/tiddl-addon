@@ -1,22 +1,14 @@
 (function () {
   const BUTTON_ID = "tiddl-local-runner-button";
+  const BUTTON_CLASS = "tiddl-local-runner-button-list";
   const STATUS_ID = "tiddl-local-runner-status";
 
   mountButton();
+  mountListButtons();
   observePlayer();
 
-  function mountButton() {
-    if (document.getElementById(BUTTON_ID)) {
-      return;
-    }
-
-    const playControl = findPlayControl();
-    if (!playControl) {
-      return;
-    }
-
+  function createButton(getMediaUrl) {
     const button = document.createElement("button");
-    button.id = BUTTON_ID;
     button.type = "button";
     button.setAttribute("aria-label", "Download with Python");
     button.setAttribute("title", "Download with Python");
@@ -26,17 +18,13 @@
       </svg>
     `;
 
-    const status = document.createElement("div");
-    status.id = STATUS_ID;
-    status.hidden = true;
-
     button.addEventListener("click", async () => {
       button.disabled = true;
       setStatus("Starting download...", false);
 
-      const mediaUrl = findCurrentMediaUrl();
+      const mediaUrl = getMediaUrl();
       if (!mediaUrl) {
-        setStatus("Unable to find the current track URL.", true);
+        setStatus("Unable to find the track URL.", true);
         button.disabled = false;
         return;
       }
@@ -61,8 +49,61 @@
       }
     });
 
+    return button;
+  }
+
+  function mountButton() {
+    if (document.getElementById(BUTTON_ID)) {
+      return;
+    }
+
+    const playControl = findPlayControl();
+    if (!playControl) {
+      return;
+    }
+
+    const button = createButton(findCurrentMediaUrl);
+    button.id = BUTTON_ID;
+
+    const status = document.createElement("div");
+    status.id = STATUS_ID;
+    status.hidden = true;
+
     playControl.insertAdjacentElement("afterend", button);
     document.body.append(status);
+  }
+
+  function mountListButtons() {
+    const mediaItems = document.querySelectorAll('[data-type="mediaItem"]');
+
+    mediaItems.forEach((item) => {
+      // Check if button already exists in this item
+      if (item.querySelector(`.${BUTTON_CLASS}`)) {
+        return;
+      }
+
+      // Find the _indexColumn and _titleColumn elements
+      const indexColumn = item.querySelector('[class*="_indexColumn_"]');
+      const titleColumn = item.querySelector('[class*="_titleColumn_"]');
+
+      if (!indexColumn || !titleColumn) {
+        return;
+      }
+
+      // Create button with a function to get the URL for this item
+      const button = createButton(() => {
+        const mediaLink = item.querySelector("a[href]");
+        const href = mediaLink?.getAttribute("href");
+        if (!href) {
+          return null;
+        }
+        return new URL(href, window.location.origin).toString();
+      });
+      button.classList.add(BUTTON_CLASS);
+
+      // Insert button after indexColumn and before titleColumn
+      titleColumn.parentElement?.insertBefore(button, titleColumn);
+    });
   }
 
   function findPlayControl() {
@@ -80,7 +121,9 @@
   }
 
   function findCurrentMediaUrl() {
-    const detailsRoot = document.querySelector('[class^="_currentMediaItemDetails_"]');
+    const detailsRoot = document.querySelector(
+      '[class^="_currentMediaItemDetails_"]',
+    );
     const mediaLink = detailsRoot?.querySelector("a[href]");
     const href = mediaLink?.getAttribute("href");
 
@@ -93,11 +136,11 @@
 
   function observePlayer() {
     const observer = new MutationObserver(() => {
-      if (document.getElementById(BUTTON_ID)) {
-        return;
+      if (!document.getElementById(BUTTON_ID)) {
+        mountButton();
       }
 
-      mountButton();
+      mountListButtons();
     });
 
     observer.observe(document.body, {

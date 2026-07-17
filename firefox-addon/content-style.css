@@ -1,10 +1,10 @@
-#tiddl-local-runner-button {
+#tiddl-local-runner-button,
+.tiddl-local-runner-button-list {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   height: 40px;
   width: 40px;
-  margin-left: 12px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -14,12 +14,14 @@
   cursor: pointer;
 }
 
-#tiddl-local-runner-button svg {
+#tiddl-local-runner-button svg,
+.tiddl-local-runner-button-list svg {
   width: 18px;
   height: 18px;
 }
 
-#tiddl-local-runner-button:disabled {
+#tiddl-local-runner-button:disabled,
+.tiddl-local-runner-button-list:disabled {
   opacity: 0.7;
   cursor: wait;
 }
