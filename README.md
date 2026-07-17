@@ -1,9 +1,9 @@
-# Firefox addon + backend Python local
+# Firefox addon + local Python backend
 
-Ce projet contient :
+This project contains:
 
-- une extension Firefox minimale qui ajoute un bouton sur une page cible
-- un backend Python local appelé en HTTP quand on clique sur ce bouton
+- a minimal Firefox extension that adds a button to a target page
+- a local Python backend called via HTTP when the button is clicked
 
 ## Setup
 
@@ -15,77 +15,55 @@ uv sync
 uv tool install --python python3.13 tiddl==3.4.4
 ```
 
-Create config file (config.toml) in ~/.tiddl to configure download settings
-
-Login into Tidal
-
-```bash
-tiddl auth login
-```
+Optionally create config file (config.toml) in ~/.tiddl to configure download settings
 
 ## Structure
 
-- `firefox-addon/` : extension Firefox
-- `backend/main.py` : serveur HTTP local Python
+- `firefox-addon/` : Firefox extension
+- `backend/main.py` : local Python HTTP server
 
-## Configuration de la page cible
+## Starting the Python backend
 
-Par defaut, l'extension s'injecte sur `https://tidal.com/*`.
-
-Pour changer la page cible, modifie `matches` dans `firefox-addon/manifest.json`.
-
-Exemple :
-
-```json
-"matches": ["https://mon-site.exemple/*"]
-```
-
-## Demarrer le backend Python
-
-Depuis la racine du projet :
+From the project root:
 
 ```bash
-python3 backend/main.py
+uv run backend/main.py
 ```
 
-Le serveur ecoute sur `http://127.0.0.1:8765` et expose `POST /run-script`.
+The server listens on `http://127.0.0.1:8765` and exposes `POST /run-script`.
 
-## Charger l'extension dans Firefox
+## Installing the extension in Firefox
 
-1. Ouvre `about:debugging#/runtime/this-firefox`
-2. Clique sur `Load Temporary Add-on`
-3. Selectionne `firefox-addon/manifest.json`
+1. Open `about:debugging#/runtime/this-firefox`
+2. Click on `Load Temporary Add-on`
+3. Select `firefox-addon/manifest.json`
 
-## Fonctionnement
+## How it works
 
-- le content script ajoute un bouton de telechargement a cote du bouton lecture du player principal
-- au clic, l'extension recupere l'URL du morceau depuis le noeud `a` dans `_currentMediaItemDetails_*`
-- le background script appelle le backend Python local
-- le backend execute `tiddl download -q max url <mediaUrl>`
+- the content script adds a download button next to the main player's play button and in the playlist view
+- on click, the extension retrieves the track URL (or ask for login if not authentified yet)
+- the background script calls the local Python backend
+- the backend executes `tiddl download -q max url <mediaUrl>`
 
-## Exemple HTML local
+## Tiddl backend
 
-Un exemple de page TIDAL exportee est disponible dans `html/` pour reperer la structure DOM et la zone d'injection autour de `#player__play`.
+The business logic is in `run_user_script()` in `backend/main.py`.
 
-## Backend tiddl
-
-La logique metier est dans `run_user_script()` dans `backend/main.py`.
-
-Le backend attend `mediaUrl` et lance la commande :
+The backend expects `mediaUrl` and runs the command:
 
 ```bash
 tiddl download -q max url <mediaUrl>
 ```
 
-## Test rapide
+## Quick test
 
-Une fois le backend lance et l'extension chargee :
+Once the backend is running and the extension is loaded:
 
-1. ouvre une page correspondant a `matches`
-2. clique sur `Run Python`
-3. verifie le message de succes affiche sur la page
+1. open a page matching `matches`
+2. click on one of the download buttons
+3. verify the success message displayed on the page
 
-## Limites
+## Limitations
 
-- Le backend Python doit etre demarre localement
-- Cette version utilise HTTP local, pas Native Messaging
+- The Python backend must be started locally
+- This version uses local HTTP, not Native Messaging

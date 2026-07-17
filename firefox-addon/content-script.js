@@ -3,15 +3,18 @@
   const BUTTON_CLASS = "tiddl-local-runner-button-list";
   const STATUS_ID = "tiddl-local-runner-status";
 
+  let activeButton = null;
+
   mountButton();
   mountListButtons();
   observePlayer();
+  listenForProgress();
 
   function createButton(getMediaUrl) {
     const button = document.createElement("button");
     button.type = "button";
-    button.setAttribute("aria-label", "Download with Python");
-    button.setAttribute("title", "Download with Python");
+    button.setAttribute("aria-label", "Download track");
+    button.setAttribute("title", "Download track");
     button.innerHTML = `
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M12 3a1 1 0 0 1 1 1v8.59l2.3-2.29a1 1 0 1 1 1.4 1.41l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.41L11 12.59V4a1 1 0 0 1 1-1Zm-7 13a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1Z" fill="currentColor"></path>
@@ -20,32 +23,31 @@
 
     button.addEventListener("click", async () => {
       button.disabled = true;
-      setStatus("Starting download...", false);
+      button.classList.add("tiddl-loading");
+      activeButton = button;
+      setStatus("Starting download...", false, false);
 
       const mediaUrl = getMediaUrl();
       if (!mediaUrl) {
         setStatus("Unable to find the track URL.", true);
-        button.disabled = false;
+        stopActiveButton();
         return;
       }
 
       try {
         const response = await browser.runtime.sendMessage({
-          type: "RUN_LOCAL_SCRIPT",
+          type: "RUN_LOCAL_SCRIPT_STREAM",
           pageUrl: window.location.href,
           mediaUrl,
         });
 
         if (!response?.ok) {
-          setStatus(response?.error || "Unknown backend error.", true);
-          return;
+          setStatus(response?.error || "Unable to start download.", true);
+          stopActiveButton();
         }
-
-        setStatus(response.message || "Python script executed.", false);
       } catch (error) {
         setStatus(`Extension error: ${error.message}`, true);
-      } finally {
-        button.disabled = false;
+        stopActiveButton();
       }
     });
 
@@ -157,7 +159,41 @@
     });
   }
 
-  function setStatus(message, isError) {
+  function listenForProgress() {
+    browser.runtime.onMessage.addListener((message) => {
+      if (message?.type !== "DOWNLOAD_PROGRESS") {
+        return;
+      }
+
+      const { event } = message;
+
+      if (event.type === "auth_required") {
+        setStatusWithLink("Authentication required", event.authUrl);
+        stopActiveButton();
+      } else if (event.type === "progress") {
+        setStatus(event.text, false, false);
+      } else if (event.type === "done") {
+        setStatus(
+          event.ok ? "Download complete!" : event.error || "Download failed.",
+          !event.ok,
+        );
+        stopActiveButton();
+      } else if (event.type === "error") {
+        setStatus(event.error || "Unknown error.", true);
+        stopActiveButton();
+      }
+    });
+  }
+
+  function stopActiveButton() {
+    if (activeButton) {
+      activeButton.disabled = false;
+      activeButton.classList.remove("tiddl-loading");
+      activeButton = null;
+    }
+  }
+
+  function setStatus(message, isError, autoHide = true) {
     const status = document.getElementById(STATUS_ID);
     if (!status) {
       return;
@@ -170,11 +206,50 @@
     // Clear any existing timeout
     if (status.hideTimeout) {
       clearTimeout(status.hideTimeout);
+      status.hideTimeout = null;
     }
 
-    // Hide the status after 10 seconds
+    if (autoHide) {
+      // Hide the status after 10 seconds
+      status.hideTimeout = setTimeout(() => {
+        status.hidden = true;
+      }, 10000);
+    }
+  }
+
+  function setStatusWithLink(message, authUrl) {
+    const status = document.getElementById(STATUS_ID);
+    if (!status) {
+      return;
+    }
+
+    status.hidden = false;
+    status.dataset.state = "error";
+
+    // Clear the content
+    status.textContent = "";
+
+    // Create message span
+    const messageSpan = document.createElement("span");
+    messageSpan.textContent = message + " ";
+    status.appendChild(messageSpan);
+
+    // Create link
+    const link = document.createElement("a");
+    link.href = authUrl;
+    link.textContent = "Click here to authenticate";
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    status.appendChild(link);
+
+    // Clear any existing timeout
+    if (status.hideTimeout) {
+      clearTimeout(status.hideTimeout);
+    }
+
+    // Hide the status after 15 seconds (longer for auth messages)
     status.hideTimeout = setTimeout(() => {
       status.hidden = true;
-    }, 10000);
+    }, 15000);
   }
 })();
