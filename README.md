@@ -68,29 +68,28 @@ docker run -d -p 8765:8765 \
 
 The `-v ~/.tiddl:/root/.tiddl` flag mounts your tiddl config directory from the host machine into the container.
 
-### GitLab CI/CD Pipeline
+### GitHub Actions Pipeline
 
-This project includes a GitLab CI/CD pipeline (`.gitlab-ci.yml`) that automatically builds and publishes the Docker image to the GitLab Container Registry.
+This project includes a GitHub Actions workflow (`.github/workflows/docker-build.yml`) that automatically builds and publishes the Docker image to the GitHub Container Registry (GHCR).
 
 **Features:**
 
-- Automatic build on commits to `main` branch
-- Automatic build and publish on git tags
+- Automatic build and push on commits to `main` branch
+- Automatic build and push on git tags (semantic versioning)
 - Images are tagged with:
   - `latest` - for commits to main
-  - `<commit-hash>` - for each commit (8 characters)
-  - `<version-tag>` - for git tags (e.g., `v1.0.0`)
+  - `main-<commit-hash>` - for each commit to main
+  - `<version>` - for git tags (e.g., `v1.0.0`, `1.0`, `1`)
 
 **Prerequisites:**
 
-- GitLab CI/CD is enabled (enabled by default)
-- No additional setup needed - CI/CD variables are automatically available
+- GitHub Actions is enabled (enabled by default for public repos)
+- No additional configuration needed - `GITHUB_TOKEN` is automatically available
 
 **Usage:**
 
-- Push to `main` branch - image is built and published as `latest`
-- Create a git tag - image is published with that tag
-
+- Push to `main` branch - image is built and published with `latest` tag
+- Create a git tag - image is published with that version tag
   ```bash
   git tag v1.0.0
   git push origin v1.0.0
@@ -99,7 +98,13 @@ This project includes a GitLab CI/CD pipeline (`.gitlab-ci.yml`) that automatica
 **Pulling the image:**
 
 ```bash
-docker pull registry.gitlab.com/<group>/<project>/tiddl-backend:latest
+docker pull ghcr.io/psaac/tiddl-addon/tiddl-backend:latest
+```
+
+Login to GHCR if needed:
+
+```bash
+echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 ```
 
 ## Installing the extension in Firefox
