@@ -3,6 +3,9 @@ FROM python:3.13-slim
 # Install uv
 RUN pip install --no-cache-dir uv
 
+# Add uv to PATH
+ENV PATH="/root/.local/bin:${PATH}"
+
 # Set working directory
 WORKDIR /app
 

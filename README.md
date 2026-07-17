@@ -90,6 +90,7 @@ This project includes a GitHub Actions workflow (`.github/workflows/docker-build
 
 - Push to `main` branch - image is built and published with `latest` tag
 - Create a git tag - image is published with that version tag
+
   ```bash
   git tag v1.0.0
   git push origin v1.0.0

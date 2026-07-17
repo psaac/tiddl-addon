@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   backend:
-    build: .
+    # build: .
     ports:
       - "8765:8765"
     environment:
