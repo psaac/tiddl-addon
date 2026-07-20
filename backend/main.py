@@ -15,6 +15,11 @@ def strip_ansi(text: str) -> str:
 
 HOST = os.getenv("BACKEND_HOST", "127.0.0.1")
 PORT = int(os.getenv("BACKEND_PORT", "8765"))
+TIDDL_OUTPUT_DIR = os.getenv("TIDDL_OUTPUT_DIR", "/downloads")
+
+
+def build_tiddl_download_command(tiddl_path: str, media_url: str) -> list[str]:
+    return [tiddl_path, "download", "-q", "max", "-p", TIDDL_OUTPUT_DIR, "url", media_url]
 
 
 def run_user_script(payload: dict) -> dict:
@@ -30,7 +35,7 @@ def run_user_script(payload: dict) -> dict:
     if not tiddl_path:
         return {"ok": False, "error": "The 'tiddl' command is not available in PATH."}
 
-    command = [tiddl_path, "download", "-q", "max", "url", media_url]
+    command = build_tiddl_download_command(tiddl_path, media_url)
 
     try:
         completed = subprocess.run(
@@ -132,7 +137,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         try:
             proc = subprocess.Popen(
-                [tiddl_path, "download", "-q", "max", "url", media_url],
+                build_tiddl_download_command(tiddl_path, media_url),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,

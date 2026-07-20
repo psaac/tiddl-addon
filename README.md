@@ -108,11 +108,24 @@ Login to GHCR if needed:
 echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 ```
 
-## Installing the extension in Firefox
+## Installing the extension in Firefox (dev mode)
 
 1. Open `about:debugging#/runtime/this-firefox`
 2. Click on `Load Temporary Add-on`
 3. Select `firefox-addon/manifest.json`
+
+## Packaging the addon
+
+```bash
+cd firefox-addon
+zip -r ../tiddl-local-runner.zip manifest.json background.js content-script.js content-style.css
+```
+
+## Installing the extension in Firefox (Permanently)
+
+1. In Firefox, go to "about:config" and enter "xpinstall.signatures.required" in search bar. Ensure it is set to false
+2. Go to about:addons
+3. Drag'n'drop the zip file previously packaged
 
 ## How it works
 

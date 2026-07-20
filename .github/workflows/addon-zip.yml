@@ -1,0 +1,32 @@
+name: Build Firefox Addon Zip
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-addon-zip:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build zip archive
+        run: |
+          set -euo pipefail
+          cd firefox-addon
+          ZIP_NAME="tiddl-local-runner-${GITHUB_SHA::7}.zip"
+          zip -r "../$ZIP_NAME" . -x "*.DS_Store"
+          echo "ZIP_NAME=$ZIP_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-addon-zip
+          path: ${{ env.ZIP_NAME }}
+          if-no-files-found: error
