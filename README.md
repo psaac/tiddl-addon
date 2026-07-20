@@ -1,11 +1,62 @@
-# Firefox addon + local Python backend
+# Firefox Tiddl download addon
 
 This project contains:
 
-- a minimal Firefox extension that adds a button to a target page
-- a local Python backend called via HTTP when the button is clicked
+- a Firefox extension that adds a button to Tidal to download tracks
+- a Docker image that handles file download
 
 ## Setup
+
+### Firefox
+
+- From the release page, download the file " tiddl-local-runner-vX.Y.Z.zip"
+- Open Firefox and go to "about:config" and enter "xpinstall.signatures.required" in search bar. Ensure it is set to false.
+- Go to about:addons
+- Drag'n'drop the zip file previously downloaded
+
+### Docker image
+
+- Docker must be installed on host
+- Retreive docker image using :
+
+  ```bash
+  docker pull ghcr.io/psaac/tiddl-addon/tiddl-backend:latest
+  ```
+
+- Login to GHCR if needed:
+
+  ```bash
+  echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+  ```
+
+- Create config.toml file (see [Github](https://github.com/oskvr37/tiddl/tree/main) for reference).
+
+- Create docker-compose.yml file with following content :
+
+  ```text
+  services:
+  tiddl-backend:
+    image: ghcr.io/psaac/tiddl-addon/tiddl-backend:latest
+    ports:
+      - "8765:8765"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - BACKEND_HOST=0.0.0.0
+      - BACKEND_PORT=8765
+      - TIDDL_OUTPUT_DIR=/downloads
+    volumes:
+      - <host path to tiddl config.toml file>:/root/.tiddl # Mount tiddl config directory
+      - <host path where to download files>:/downloads # Mount host download directory
+    restart: unless-stopped
+  ```
+
+- Finally start docker :
+
+  ```bash
+  docker compose up -d
+  ```
+
+## Contribute
 
 Install tiddl ([Github](https://github.com/oskvr37/tiddl/tree/main)):
 
@@ -108,24 +159,11 @@ Login to GHCR if needed:
 echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 ```
 
-## Installing the extension in Firefox (dev mode)
+## Installing the extension in Firefox (Dev mode)
 
 1. Open `about:debugging#/runtime/this-firefox`
 2. Click on `Load Temporary Add-on`
 3. Select `firefox-addon/manifest.json`
-
-## Packaging the addon
-
-```bash
-cd firefox-addon
-zip -r ../tiddl-local-runner.zip manifest.json background.js content-script.js content-style.css
-```
-
-## Installing the extension in Firefox (Permanently)
-
-1. In Firefox, go to "about:config" and enter "xpinstall.signatures.required" in search bar. Ensure it is set to false
-2. Go to about:addons
-3. Drag'n'drop the zip file previously packaged
 
 ## How it works
 
@@ -156,7 +194,3 @@ Once the backend is running and the extension is loaded:
 
 - This version uses local HTTP, not Native Messaging
 - The Firefox extension and backend must be on the same machine (or the backend must be accessible from the browser)
-
-## TODO
-
-Fix download location as it is now downloaded inside docker container
